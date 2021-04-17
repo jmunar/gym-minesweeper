@@ -168,17 +168,76 @@ class MineSweeper(gym.Env):
         self.done = False
         return self._layout
 
+    @property
+    def _render_figsize(self) -> Tuple[float, float]:
+        """Figure size, in inches (proportional to the board size)"""
+        return (0.25 * self.width, 0.25 * self.height)
+
+    def render_grid(self, nrows: int, ncols: int) -> Iterable[plt.Axes]:
+        """
+        Create grid to render the first steps of a game
+
+        Args:
+            nrows: number of rows in the grid
+            ncols: number of cols in the grid
+
+        Examples:
+
+            Play a single game and show the steps in a grid:
+
+            ```python
+            import gym
+            import numpy as np
+
+            env = gym.make('gym_minesweeper:minesweeper-v0')
+
+            np.random.seed(14)
+            env.action_space.np_random.seed(14)
+
+            for ax in env.render_grid(nrows=2, ncols=4):
+                action = env.action_space.sample()
+                _, _, done, _  = env.step(action)
+                env.render(action, ax=ax)
+                if done:
+                    break
+            ```
+        """
+
+        axsize = self._render_figsize
+        margin = 0.5
+        figsize = (
+            axsize[0] * ncols + margin * (ncols - 1),
+            axsize[1] * nrows + margin * (nrows - 1),
+        )
+        plt.figure(figsize=figsize)
+
+        width = axsize[0] / figsize[0]
+        height = axsize[1] / figsize[1]
+
+        for j in range(nrows):
+            for i in range(ncols):
+                left = i * (axsize[0] + margin) / figsize[0]
+                bottom = ((nrows - j - 1) * (axsize[1] + margin) + axsize[1]) / figsize[
+                    1
+                ]
+                ax = plt.axes((left, bottom, width, height))
+                yield ax
+
     def render(  # pylint: disable=arguments-differ
-        self, action: Optional[Iterable[int]] = None, mode: str = "human"
+        self,
+        action: Optional[Iterable[int]] = None,
+        ax: Optional[plt.Axes] = None,
+        mode: str = "human",
     ):
         """
         Simple rendering using matplotlib
         """
         assert mode in self.metadata["render.modes"]
 
-        # Create figure with size proportional to the board size
-        plt.figure(figsize=(0.25 * self.width, 0.25 * self.height))
-        ax = plt.axes((0, 0, 1, 1))
+        if not ax:
+            plt.figure(figsize=self._render_figsize)
+            ax = plt.axes((0, 0, 1, 1))
+
         ax.get_xaxis().set_visible(False)
         ax.get_yaxis().set_visible(False)
         ax.set(xlim=(0, self.width), ylim=(self.height, 0))
