@@ -1,0 +1,14 @@
+
+### Core requirements ###
+gym
+matplotlib
+numpy
+scipy
+
+### Reinforcement learning requirements ###
+stable-baselines3
+tensorboard
+
+### Development ###
+black
+pre-commit
